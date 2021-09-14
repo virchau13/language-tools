@@ -45,8 +45,6 @@ function preprocess(text: string) {
       currentStartTagStart = null;
     }
 
-    // <Foo checked={a < 1}>
-    // https://github.com/microsoft/vscode-html-languageservice/blob/71806ef57be07e1068ee40900ef8b0899c80e68a/src/parser/htmlScanner.ts#L327
     if (token === TokenType.Unknown && scanner.getScannerState() === ScannerState.WithinTag && scanner.getTokenText() === '<' && shouldBlankStartOrEndTagLike(offset)) {
       blankStartOrEndTagLike(offset);
     }

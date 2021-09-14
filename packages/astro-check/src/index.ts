@@ -1,7 +1,108 @@
-import { startServer } from '@astrojs/language-server';
+import { AstroCheck } from '@astrojs/language-server';
+import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver-protocol';
+import { bold, blue, black, bgWhite, red, yellow } from 'kleur/colors';
+import { URI } from 'vscode-uri';
+import glob from 'fast-glob';
+import * as path from 'path';
+import * as fs from 'fs';
 
-export function run() {
-  console.log("HERE I GO!");
+async function openAllDocuments(
+  workspaceUri: URI,
+  filePathsToIgnore: string[],
+  checker: AstroCheck
+) {
+  const files = await glob('**/*.astro', {
+      cwd: workspaceUri.fsPath,
+      ignore: ['node_modules/**'].concat(filePathsToIgnore.map((ignore) => `${ignore}/**`))
+  });
+  const absFilePaths = files.map((f) => path.resolve(workspaceUri.fsPath, f));
 
-  startServer();
+  for (const absFilePath of absFilePaths) {
+      const text = fs.readFileSync(absFilePath, 'utf-8');
+      checker.upsertDocument(
+          {
+              uri: URI.file(absFilePath).toString(),
+              text
+          },
+          true
+      );
+  }
+}
+
+interface Result {
+  errors: number;
+  warnings: number;
+}
+
+function offsetAt({ line, character }: { line: number, character: number; }, text: string) {
+  let i = 0;
+  let l = 0;
+  let c = 0;
+  while(i < text.length) {
+    if(l === line && c === character) {
+      break;
+    }
+
+    let char = text[i];
+    switch(char) {
+      case '\n': {
+        l++;
+        c = 0;
+        break;
+      }
+      default: {
+        c++;
+        break;
+      }
+    }
+
+    i++;
+  }
+
+  return i;
+}
+
+function pad(str: string, len: number) {
+  return Array.from({ length: len }, () => str).join('');
+}
+
+export async function run() {
+  const cwd = process.cwd();
+  const root = URI.file(cwd);
+  let checker = new AstroCheck(root.toString());
+  await openAllDocuments(root, [], checker);
+
+  let diagnostics = await checker.getDiagnostics();
+
+  let result: Result = {
+    errors: 0,
+    warnings: 0
+  };
+
+  diagnostics.forEach(diag => {
+    diag.diagnostics.forEach(d => {
+      switch(d.severity) {
+        case DiagnosticSeverity.Error: {
+          console.error(`${bold(blue(path.relative(cwd, diag.filePath)))}:${bold(yellow(d.range.start.line - 1))}:${bold(yellow(d.range.start.character))} - ${d.message}`);
+          let startOffset = offsetAt({ line: d.range.start.line, character: 0 }, diag.text);
+          let endOffset = offsetAt({ line: d.range.start.line + 1, character: 0 }, diag.text);
+          let str = diag.text.substring(startOffset, endOffset - 1);
+          console.error(`${bgWhite(black(d.range.start.line - 1))}  ${str}`);
+          let tildes = pad('~', d.range.end.character - d.range.start.character);
+          let spaces = pad(' ', d.range.start.character);
+          console.error(`   ${spaces}${bold(red(tildes))}`)
+          result.errors++;
+          break;
+        }
+        case DiagnosticSeverity.Warning: {
+          result.warnings++;
+          break;
+        }
+      }
+    });
+  });
+
+  console.log(result);
+  const exitCode = result.errors ? 1 : 0;
+  process.exit(exitCode);
 }
