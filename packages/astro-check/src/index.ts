@@ -23,8 +23,7 @@ async function openAllDocuments(
           {
               uri: URI.file(absFilePath).toString(),
               text
-          },
-          true
+          }
       );
   }
 }

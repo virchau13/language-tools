@@ -1,0 +1,23 @@
+{
+  "name": "@astrojs/ts-tools",
+  "version": "0.1.0",
+  "description": "TypeScript tools for Astro Language Tools",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "astro",
+    "typescript",
+    "javascript",
+    "plugin"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "astro-scripts dev \"src/**/*.ts\""
+  },
+  "author": "Skypack",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^4.3.1-rc"
+  }
+}

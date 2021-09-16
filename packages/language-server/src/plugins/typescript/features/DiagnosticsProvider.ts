@@ -108,8 +108,7 @@ export class DiagnosticsProviderImpl implements DiagnosticsProvider {
                     isNoCantResolveJSONModule(diag) &&
                     isNoMarkdownBlockQuoteWithinMarkdown(sourceFile, markdownBoundaries, diag)
                 );
-            })
-            .map(enhanceIfNecessary);
+            });
     }
 
     private async getLSAndTSDoc(document: Document) {
@@ -274,50 +273,6 @@ function isNoMarkdownBlockQuoteWithinMarkdown(sourceFile: ts.SourceFile | undefi
     }
 
     return !diagnosticIsWithinBoundaries(sourceFile, boundaries, diagnostic);
-}
-
-/**
- * Some diagnostics have JSX-specific nomenclature. Enhance them for more clarity.
- */
-function enhanceIfNecessary(diagnostic: Diagnostic): Diagnostic {
-    if (diagnostic.code === 2786) {
-        return {
-            ...diagnostic,
-            message:
-                'Type definitions are missing for this Svelte Component. ' +
-                // eslint-disable-next-line max-len
-                "It needs a class definition with at least the property '$$prop_def' which should contain a map of input property definitions.\n" +
-                'Example:\n' +
-                '  class ComponentName { $$prop_def: { propertyName: string; } }\n' +
-                'If you are using Svelte 3.31+, use SvelteComponentTyped:\n' +
-                '  import type { SvelteComponentTyped } from "svelte";\n' +
-                '  class ComponentName extends SvelteComponentTyped<{propertyName: string;}> {}\n\n' +
-                'Underlying error:\n' +
-                diagnostic.message
-        };
-    }
-
-    if (diagnostic.code === 2607) {
-        return {
-            ...diagnostic,
-            message:
-                'Element does not support attributes because ' +
-                'type definitions are missing for this Svelte Component or element cannot be used as such.\n\n' +
-                'Underlying error:\n' +
-                diagnostic.message
-        };
-    }
-
-    if (diagnostic.code === 1184) {
-        return {
-            ...diagnostic,
-            message:
-                diagnostic.message +
-                '\nIf this is a declare statement, move it into <script context="module">..</script>'
-        };
-    }
-
-    return diagnostic;
 }
 
 /**

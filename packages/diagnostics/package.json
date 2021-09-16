@@ -1,0 +1,23 @@
+{
+  "name": "@astrojs/diagnostics",
+  "version": "0.1.0",
+  "description": "Diagnostic information for Astro projects",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "astro",
+    "typescript",
+    "javascript",
+    "plugin"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "astro-scripts dev \"src/**/*.ts\""
+  },
+  "author": "Skypack",
+  "license": "MIT",
+  "dependencies": {
+    "@astrojs/ts-tools": "0.1.0"
+  }
+}

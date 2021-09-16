@@ -1,4 +1,4 @@
-import type { Diagnostic, Position, Range } from 'vscode-languageserver';
+import type { Diagnostic } from 'vscode-languageserver';
 import { DocumentManager } from './core/documents';
 import { ConfigManager } from './core/config';
 import { PluginHost, TypeScriptPlugin } from './plugins';
@@ -18,7 +18,7 @@ export class AstroCheck {
     this.initialize(workspacePath);
   }
 
-  upsertDocument(doc: { text: string; uri: string }, isNew: boolean) {
+  upsertDocument(doc: { text: string; uri: string }) {
     this.docManager.openDocument({
       text: doc.text,
       uri: doc.uri

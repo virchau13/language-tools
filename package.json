@@ -9,8 +9,8 @@
   "scripts": {
     "release": "yarn build && changeset publish",
     "benchmark": "yarn workspace astro run benchmark",
-    "build": "lerna run build --scope \"{@astrojs/language-server,astro-vscode,@astrojs/ts-plugin}\"",
-    "dev": "lerna run dev --scope \"{@astrojs/language-server,astro-vscode,@astrojs/ts-plugin}\" --parallel --stream",
+    "build": "lerna run build --scope \"{@astrojs/language-server,astro-vscode,@astrojs/ts-plugin,@astrojs/ts-tools,@astrojs/diagnostics}\"",
+    "dev": "lerna run dev --scope \"{@astrojs/language-server,astro-vscode,@astrojs/ts-plugin,@astrojs/ts-tools,@astrojs/diagnostics}\" --parallel --stream",
     "format": "prettier -w .",
     "lint": "eslint \"packages/**/*.ts\"",
     "test": "yarn workspace @astrojs/vscode run test"

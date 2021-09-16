@@ -1,5 +1,4 @@
 import * as ts from 'typescript';
-import { readFileSync } from 'fs';
 import { TextDocumentContentChangeEvent, Position, Range } from 'vscode-languageserver';
 import { Document, DocumentMapper, IdentityMapper } from '../../core/documents';
 import { isInTag, positionAt, offsetAt } from '../../core/documents/utils';

@@ -1,15 +1,12 @@
 /* eslint-disable require-jsdoc */
 
-import {
-  getParsedCommandLine,
-  createLanguageServiceFromCommandLine
-} from '@astrojs/ts-tools';
-
 import * as ts from 'typescript';
+import { basename } from 'path';
 import { ensureRealAstroFilePath, findTsConfigPath } from './utils';
 import { Document } from '../../core/documents';
 import { SnapshotManager } from './SnapshotManager';
 import { createDocumentSnapshot, DocumentSnapshot } from './DocumentSnapshot';
+import { createAstroModuleLoader } from './module-loader';
 
 const services = new Map<string, Promise<LanguageServiceContainer>>();
 
@@ -51,7 +48,36 @@ export async function getLanguageServiceForPath(path: string, workspaceUris: str
 }
 
 async function createLanguageService(tsconfigPath: string, workspaceRoot: string, docContext: LanguageServiceDocumentContext): Promise<LanguageServiceContainer> {
-  const project = getParsedCommandLine(tsconfigPath, workspaceRoot);
+  const parseConfigHost: ts.ParseConfigHost = {
+    ...ts.sys,
+    readDirectory: (path, extensions, exclude, include, depth) => {
+      return ts.sys.readDirectory(path, [...extensions, '.vue', '.svelte', '.astro', '.js', '.jsx'], exclude, include, depth);
+    },
+  };
+
+  let configJson = (tsconfigPath && ts.readConfigFile(tsconfigPath, ts.sys.readFile).config) || getDefaultJsConfig();
+  if (!configJson.extends) {
+    configJson = Object.assign(
+      {
+        exclude: getDefaultExclude(),
+      },
+      configJson
+    );
+  }
+
+  const existingCompilerOptions: ts.CompilerOptions = {
+    jsx: ts.JsxEmit.ReactJSX,
+    module: ts.ModuleKind.ESNext,
+    target: ts.ScriptTarget.ESNext
+  };
+
+  const project = ts.parseJsonConfigFileContent(configJson, parseConfigHost, workspaceRoot, existingCompilerOptions, basename(tsconfigPath), undefined, [
+    { extension: '.vue', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred },
+    { extension: '.svelte', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred },
+    { extension: '.astro', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred },
+  ]);
+
+  let projectVersion = 0;
 
   const snapshotManager = new SnapshotManager(
     project.fileNames,
@@ -62,24 +88,50 @@ async function createLanguageService(tsconfigPath: string, workspaceRoot: string
     workspaceRoot || process.cwd()
   );
 
-  const tls = createLanguageServiceFromCommandLine(project, workspaceRoot, {
-    getScriptFileNames() {
-      return ['one'];
+  const astroModuleLoader = createAstroModuleLoader(getScriptSnapshot, {});
+
+  const host: ts.LanguageServiceHost = {
+    getNewLine: () => ts.sys.newLine,
+    useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
+    readFile: astroModuleLoader.readFile,
+    writeFile: astroModuleLoader.writeFile,
+    fileExists: astroModuleLoader.fileExists,
+    directoryExists: astroModuleLoader.directoryExists,
+    getDirectories: astroModuleLoader.getDirectories,
+    readDirectory: astroModuleLoader.readDirectory,
+    realpath: astroModuleLoader.realpath,
+
+    getCompilationSettings: () => project.options,
+    getCurrentDirectory: () => workspaceRoot,
+    getDefaultLibFileName: () => ts.getDefaultLibFilePath(project.options),
+
+    getProjectVersion: () => projectVersion.toString(),
+    getScriptFileNames: () => Array.from(new Set([...snapshotManager.getFileNames(), ...snapshotManager.getProjectFileNames()])),
+    getScriptSnapshot,
+    getScriptVersion: (fileName: string) => {
+      let snapshotVersion = getScriptSnapshot(fileName).version.toString();
+      return snapshotVersion;
     },
-    getTextForFile(filePath: string) {
-      const snapshot = getScriptSnapshot(filePath);
-      return snapshot.getFullText();
+  };
+
+  const languageService: ts.LanguageService = ts.createLanguageService(host);
+  const languageServiceProxy = new Proxy(languageService, {
+    get(target, prop) {
+      return Reflect.get(target, prop);
     },
-    getScriptSnapshot
   });
 
   return {
     tsconfigPath,
     snapshotManager,
-    getService: tls.getService,
+    getService: () => languageServiceProxy,
     updateDocument,
     deleteDocument,
   };
+
+  function onProjectUpdated() {
+    projectVersion++;
+  }
 
   function deleteDocument(filePath: string) {
     snapshotManager.delete(filePath);
@@ -101,7 +153,7 @@ async function createLanguageService(tsconfigPath: string, workspaceRoot: string
     const currentText = document ? document.getText() : null;
     const snapshot = createDocumentSnapshot(filePath, currentText, docContext.createDocument);
     snapshotManager.set(filePath, snapshot);
-    tls.onProjectUpdated();
+    onProjectUpdated();
     return snapshot;
   }
 
@@ -117,4 +169,26 @@ async function createLanguageService(tsconfigPath: string, workspaceRoot: string
     snapshotManager.set(fileName, doc);
     return doc;
   }
+}
+
+/**
+ * This should only be used when there's no jsconfig/tsconfig at all
+ */
+function getDefaultJsConfig(): {
+  compilerOptions: ts.CompilerOptions;
+  include: string[];
+} {
+  let compilerOptions = {
+    maxNodeModuleJsDepth: 2,
+    allowSyntheticDefaultImports: true,
+    allowJs: true
+  };
+  return {
+    compilerOptions,
+    include: ['src'],
+  };
+}
+
+function getDefaultExclude() {
+  return ['dist', 'node_modules'];
 }
