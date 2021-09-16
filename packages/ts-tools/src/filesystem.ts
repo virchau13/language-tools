@@ -10,6 +10,11 @@ export interface FileSystemOptions {
   getTextForFile(fileName: string): string;
 }
 
+const ignoredDirectories = [
+  "node_modules/@types/react"
+];
+const ignoredDirectoriesExp = new RegExp("(" + ignoredDirectories.map(n => n + "$").join("|") + ")");
+
 /**
  * This should only be accessed by TS Astro module resolution.
  */
@@ -19,6 +24,12 @@ export function createFileSystem({ getTextForFile }: FileSystemOptions) {
     fileExists(path: string) {
       let doesExist = ts.sys.fileExists(ensureRealAstroFilePath(path));
       return doesExist;
+    },
+    directoryExists(path: string) {
+      if(ignoredDirectoriesExp.test(path)) {
+        return false;
+      }
+      return ts.sys.directoryExists(path);
     },
     readFile(path: string) {
       if (isAstroFilePath(path) || isVirtualAstroFilePath(path)) {
