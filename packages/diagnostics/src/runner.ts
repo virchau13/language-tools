@@ -1,14 +1,18 @@
 import type { RunnerFileMap } from './types';
 import type { TypeScriptDiagnosticsContainer } from './typescript/index';
 import type { Diagnostic } from 'vscode-languageserver';
+import type { PathsOutput } from 'fdir';
 import {
   getDiagnosticsFromContainer as getTypeScriptDiagnosticsFromContainer,
   createContainer as createTypeScriptContainer
 } from './typescript/index';
+import {fdir} from 'fdir';
+import * as fs from 'fs';
 
 interface Runner {
   files: RunnerFileMap;
   tsContainer: TypeScriptDiagnosticsContainer;
+  workspaceRoot: string;
 }
 
 export function createRunner(workspaceRoot: string): Runner {
@@ -17,8 +21,21 @@ export function createRunner(workspaceRoot: string): Runner {
 
   return {
     files,
-    tsContainer
+    tsContainer,
+    workspaceRoot
   };
+}
+
+export function addWorkspaceDefinitions(runner: Runner) {
+  const files = new fdir()
+  .withBasePath()
+  .filter((path, isDirectory) => isDirectory || path.endsWith('package.json') || path.endsWith('.d.ts'))
+  .crawl(runner.workspaceRoot)
+  .sync() as PathsOutput;
+
+  for(let file of files) {
+    addFile(runner, file, fs.readFileSync(file, 'utf-8'));
+  }
 }
 
 export function addFile(runner: Runner, fileName: string, source: string): void {

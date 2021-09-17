@@ -5,12 +5,17 @@ console.log(astroDiag);
 
 const {
   addFile,
+  addWorkspaceDefinitions,
   createRunner,
   getAllDiagnostics
 } = astroDiag;
 
-const runner = createRunner('/project');
-addFile(runner, '/project/file.astro', `
+const root = new URL('../../../', import.meta.url);
+const runner = createRunner(root.pathname);
+addWorkspaceDefinitions(runner);
+console.log("FILES", Array.from(runner.files.keys()));
+debugger;
+addFile(runner, new URL('./main.astro', root).pathname, `
 <html>
   <body class="is-preload">
     <!-- Wrapper -->

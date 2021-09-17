@@ -5,5 +5,6 @@ export {
 export {
   createRunner,
   getAllDiagnostics,
-  addFile
+  addFile,
+  addWorkspaceDefinitions
 } from './runner';

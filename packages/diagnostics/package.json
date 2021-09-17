@@ -18,7 +18,8 @@
   "author": "Skypack",
   "license": "MIT",
   "dependencies": {
-    "@astrojs/ts-tools": "0.1.0"
+    "@astrojs/ts-tools": "0.1.0",
+    "fdir": "^5.1.0"
   },
   "devDependencies": {
     "tap": "^15.0.9"

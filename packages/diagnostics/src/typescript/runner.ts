@@ -1,10 +1,11 @@
-import type { LanguageServiceContainer } from '@astrojs/ts-tools';
+import { isVirtualAstroFilePath, LanguageServiceContainer } from '@astrojs/ts-tools';
 import type { RunnerFileMap } from '../types';
 import {
   astro2tsx,
   createLanguageService,
   ensureRealAstroFilePath,
-  toVirtualAstroFilePath
+  toVirtualAstroFilePath,
+  isAstroFilePath
 } from '@astrojs/ts-tools';
 import { pathToFileURL } from 'url';
 import { getDiagnostics } from './diagnostics';
@@ -31,9 +32,25 @@ function createSnapshot(source: string) {
 }
 
 export function createContainer(workspaceRoot: string, files: RunnerFileMap): TypeScriptDiagnosticsContainer {
-  function getTextForFile(fileName: string): string {
+  const tsxCache = new Map<string, string>();
+
+  function getTextForFile(origFileName: string): string {
+    let fileName = origFileName;
+    if(isVirtualAstroFilePath(fileName)) {
+      fileName = ensureRealAstroFilePath(fileName);
+    }
     if(!files.has(fileName)) {
-      throw new Error(`Cannot find ${fileName}`);
+      console.log('couldnt find', fileName);
+      return '';
+    }
+    if(isVirtualAstroFilePath(origFileName)) {
+      if(tsxCache.has(fileName)) {
+        return tsxCache.get(fileName)!;
+      }
+      let source = files.get(fileName)!.source;
+      let tsx = astro2tsx(source).code;
+      tsxCache.set(fileName, tsx);
+      return tsx;
     }
     let source = files.get(fileName)!.source;
     return source;
@@ -49,7 +66,7 @@ export function createContainer(workspaceRoot: string, files: RunnerFileMap): Ty
     },
     getTextForFile,
     getScriptSnapshot(fileName: string) {
-      let source = getTextForFile(ensureRealAstroFilePath(fileName));
+      let source = getTextForFile(fileName);
       let snapshot = createSnapshot(source);
       return snapshot;
     }
