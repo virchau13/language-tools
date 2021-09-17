@@ -64,7 +64,10 @@ async function createLanguageService(tsconfigPath: string, workspaceRoot: string
 
   const tls = createLanguageServiceFromCommandLine(project, workspaceRoot, {
     getScriptFileNames() {
-      return ['one'];
+      return Array.from(new Set([
+        ...snapshotManager.getFileNames(),
+        ...snapshotManager.getProjectFileNames()
+      ]));
     },
     getTextForFile(filePath: string) {
       const snapshot = getScriptSnapshot(filePath);

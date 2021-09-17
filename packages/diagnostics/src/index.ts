@@ -1,7 +1,9 @@
-import {
+export {
   getDiagnostics as getTypeScriptDiagnostics
 } from './typescript/index';
 
 export {
-  getTypeScriptDiagnostics
-};
+  createRunner,
+  getAllDiagnostics,
+  addFile
+} from './runner';

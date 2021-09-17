@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import ts, { ScriptKind } from 'typescript';
 import {
   Diagnostic,
   DiagnosticSeverity,
@@ -7,6 +7,10 @@ import {
 } from 'vscode-languageserver';
 import { toVirtualAstroFilePath } from '@astrojs/ts-tools';
 import { convertRange, mapSeverity } from '../utils';
+
+export {
+    ScriptKind
+};
 
 type BoundaryTuple = [number, number];
 

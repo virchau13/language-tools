@@ -17,5 +17,10 @@ export {
 export {
   createLanguageService,
   createLanguageServiceFromCommandLine,
-  getParsedCommandLine
+  getParsedCommandLine,
+  LanguageServiceContainer
 } from './languageservice';
+
+export {
+  default as astro2tsx
+} from './astro2tsx';
