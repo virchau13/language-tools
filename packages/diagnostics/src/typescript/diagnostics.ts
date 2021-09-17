@@ -57,7 +57,6 @@ export async function getDiagnostics(
         script: scriptBoundaries,
         markdown: markdownBoundaries
     } = getTagBoundaries(lang, tsFilePath);
-
     const syntaxDiagnostics = lang.getSyntacticDiagnostics(tsFilePath);
     const suggestionDiagnostics = lang.getSuggestionDiagnostics(tsFilePath);
     const semanticDiagnostics = lang.getSemanticDiagnostics(tsFilePath).filter(d => {

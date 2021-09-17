@@ -29,7 +29,7 @@ export function createRunner(workspaceRoot: string): Runner {
 export function addWorkspaceDefinitions(runner: Runner) {
   const files = new fdir()
   .withBasePath()
-  .filter((path, isDirectory) => isDirectory || path.endsWith('package.json') || path.endsWith('.d.ts'))
+  .filter((path, isDirectory) => isDirectory || path.endsWith('package.json'))
   .crawl(runner.workspaceRoot)
   .sync() as PathsOutput;
 
@@ -48,10 +48,12 @@ export function addFile(runner: Runner, fileName: string, source: string): void 
 export async function getAllDiagnostics(runner: Runner): Promise<Map<string, Diagnostic[]>> {
   const diagMap = new Map<string, Diagnostic[]>();
 
+  console.time('diagnostics');
   for(const [fileName] of runner.files) {
     const diagnostics = await getTypeScriptDiagnosticsFromContainer(runner.tsContainer, fileName);
     diagMap.set(fileName, diagnostics);
   }
+  console.timeEnd('diagnostics');
 
   return diagMap;
 }

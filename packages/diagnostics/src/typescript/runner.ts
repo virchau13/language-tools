@@ -10,6 +10,7 @@ import {
 import { pathToFileURL } from 'url';
 import { getDiagnostics } from './diagnostics';
 import { ScriptKind } from 'typescript';
+import * as fs from 'fs';
 
 export interface TypeScriptDiagnosticsContainer {
   als: LanguageServiceContainer,
@@ -33,6 +34,7 @@ function createSnapshot(source: string) {
 
 export function createContainer(workspaceRoot: string, files: RunnerFileMap): TypeScriptDiagnosticsContainer {
   const tsxCache = new Map<string, string>();
+  const snapshots = new Map<string, any>();
 
   function getTextForFile(origFileName: string): string {
     let fileName = origFileName;
@@ -40,8 +42,7 @@ export function createContainer(workspaceRoot: string, files: RunnerFileMap): Ty
       fileName = ensureRealAstroFilePath(fileName);
     }
     if(!files.has(fileName)) {
-      console.log('couldnt find', fileName);
-      return '';
+      return fs.readFileSync(fileName, 'utf-8');
     }
     if(isVirtualAstroFilePath(origFileName)) {
       if(tsxCache.has(fileName)) {
@@ -66,8 +67,12 @@ export function createContainer(workspaceRoot: string, files: RunnerFileMap): Ty
     },
     getTextForFile,
     getScriptSnapshot(fileName: string) {
+      if(snapshots.has(fileName)) {
+        return snapshots.get(fileName);
+      }
       let source = getTextForFile(fileName);
       let snapshot = createSnapshot(source);
+      snapshots.set(fileName, snapshot);
       return snapshot;
     }
   });

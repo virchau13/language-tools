@@ -1,20 +1,18 @@
 import astroDiag from '../dist/index.js';
 import t from 'tap';
 
-console.log(astroDiag);
-
 const {
   addFile,
-  addWorkspaceDefinitions,
   createRunner,
   getAllDiagnostics
 } = astroDiag;
 
 const root = new URL('../../../', import.meta.url);
+console.time('createRunner');
 const runner = createRunner(root.pathname);
-addWorkspaceDefinitions(runner);
-console.log("FILES", Array.from(runner.files.keys()));
-debugger;
+console.timeEnd('createRunner');
+
+console.time('addFile');
 addFile(runner, new URL('./main.astro', root).pathname, `
 <html>
   <body class="is-preload">
@@ -26,30 +24,9 @@ addFile(runner, new URL('./main.astro', root).pathname, `
   </body>
 </html>
 `);
+console.timeEnd('addFile');
 
-const diagMap = await getAllDiagnostics(runner);
-
-console.log(diagMap);
-
-/*
-const { AstroCheck } = als;
-
-let checker = new AstroCheck();
-
-checker.upsertDocument({
-  uri: 'file://fake/file.astro',
-  text: `
-<html>
-  <body class="is-preload">
-    <!-- Wrapper -->
-    <div id="wrapper">
-      <!-- Main -->
-      <div id="main"></div>
-    </div>
-  </body>
-</html>
-`});
-
-let [{diagnostics}] = await checker.getDiagnostics();
+console.time('getAllDiagnostics');
+const [[,diagnostics]] = await getAllDiagnostics(runner);
+console.timeEnd('getAllDiagnostics');
 t.equal(diagnostics.length, 0, 'No errors found');
-*/
