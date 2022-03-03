@@ -72,6 +72,7 @@ export function createAstroModuleLoader(getSnapshot: (fileName: string) => Docum
   };
 
   function resolveModuleNames(moduleNames: string[], containingFile: string): Array<ts.ResolvedModule | undefined> {
+		console.log('resolveModuleNames', moduleNames)
     return moduleNames.map((moduleName) => {
       const cachedModule = moduleCache.get(moduleName, containingFile);
       if (cachedModule) {

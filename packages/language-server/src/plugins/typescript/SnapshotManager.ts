@@ -21,7 +21,10 @@ export class SnapshotManager {
 
     if (include?.length === 0) return;
 
-    const projectFiles = ts.sys.readDirectory(this.workspaceRoot, this.watchExtensions, exclude, include);
+    let projectFiles = ts.sys.readDirectory(this.workspaceRoot, this.watchExtensions, exclude, include);
+
+
+		projectFiles = projectFiles.map(name => name.endsWith('.vue') ? name + '.jsx' : name)
 
     this.projectFiles = Array.from(new Set([...this.projectFiles, ...projectFiles]));
   }
@@ -66,7 +69,9 @@ export class SnapshotManager {
   }
 
   getFileNames() {
-    return Array.from(this.documents.keys()).map((fileName) => toVirtualAstroFilePath(fileName));
+    return Array.from(this.documents.keys()).map((fileName) => {
+			return toVirtualAstroFilePath(fileName);
+		});
   }
 
   getProjectFileNames() {

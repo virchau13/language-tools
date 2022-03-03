@@ -51,7 +51,11 @@ export interface DocumentSnapshot extends ts.IScriptSnapshot {
 }
 
 export const createDocumentSnapshot = (filePath: string, currentText: string | null, createDocument?: (_filePath: string, text: string, overrideText: boolean) => Document): DocumentSnapshot => {
-  const text = currentText || (ts.sys.readFile(filePath) ?? '');
+  let text = currentText || (ts.sys.readFile(filePath) ?? '');
+
+	if(filePath.includes('.vue')) {
+		text = 'export default function() {}';
+	}
 
   if (isAstroFilePath(filePath)) {
     if (!createDocument) throw new Error('Astro documents require the "createDocument" utility to be provided');

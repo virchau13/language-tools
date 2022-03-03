@@ -92,8 +92,15 @@ async function createLanguageService(tsconfigPath: string, workspaceRoot: string
 
   let projectVersion = 0;
 
+	const fileNames = project.fileNames.map(name => {
+		if(name.endsWith('.vue')) {
+			return name + '.tsx';
+		}
+		return name;
+	})
+
   const snapshotManager = new SnapshotManager(
-    project.fileNames,
+    fileNames,
     {
       exclude: ['node_modules', 'dist'],
       include: ['src'],
@@ -179,6 +186,7 @@ async function createLanguageService(tsconfigPath: string, workspaceRoot: string
     }
 
     doc = createDocumentSnapshot(fileName, null, docContext.createDocument);
+
     snapshotManager.set(fileName, doc);
     return doc;
   }

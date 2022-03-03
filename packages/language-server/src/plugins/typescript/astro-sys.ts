@@ -15,6 +15,7 @@ export function createAstroSys(getSnapshot: (fileName: string) => DocumentSnapsh
     ...ts.sys,
     fileExists(path: string) {
       let doesExist = ts.sys.fileExists(ensureRealAstroFilePath(path));
+			console.log('doesExist', path);
       return doesExist;
     },
     directoryExists(path: string) {
@@ -24,15 +25,23 @@ export function createAstroSys(getSnapshot: (fileName: string) => DocumentSnapsh
       return ts.sys.directoryExists(path);
     },
     readFile(path: string) {
+			console.log('readFile', path);
       if (isAstroFilePath(path) || isVirtualAstroFilePath(path)) {
         console.log('readFile', path);
       }
       const snapshot = getSnapshot(path);
-      return snapshot.getFullText();
+      let text = snapshot.getFullText();
+			return text;
     },
     readDirectory(path, extensions, exclude, include, depth) {
       const extensionsWithAstro = (extensions ?? []).concat(...['.astro', '.svelte', '.vue']);
       const result = ts.sys.readDirectory(path, extensionsWithAstro, exclude, include, depth);
+			result.map(name => {
+				if(name.endsWith('.vue')) {
+					return name + '.jsx';
+				}
+				return name;
+			})
       return result;
     },
   };
