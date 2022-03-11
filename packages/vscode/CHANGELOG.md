@@ -1,12 +1,5 @@
 # astro-vscode
 
-## 0.10.5
-
-### Patch Changes
-
-- bd0836d: - Added license
-  - Package extension before publishing
-
 ## 0.10.4
 
 ### Patch Changes
