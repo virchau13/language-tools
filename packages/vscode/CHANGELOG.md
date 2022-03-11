@@ -1,11 +1,5 @@
 # astro-vscode
 
-## 0.10.2
-
-### Patch Changes
-
-- 08269d1: Downgraded @types/vscode
-
 ## 0.10.1
 
 ### Patch Changes
