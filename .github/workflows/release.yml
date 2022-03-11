@@ -11,26 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0 # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
-      
-      - name: Setup pnpm 
-        uses: pnpm/action-setup@v2.2.1
 
-      - name: Set up Node.js 16.x
-        uses: actions/setup-node@v3
+      - name: Set up Node.js 14.x
+        uses: actions/setup-node@v2
         with:
-          node-version: 16.x
+          node-version: 14.x
           
       - name: Install dependencies
-        run: pnpm install
+        run: yarn --frozen-lockfile --ignore-engines
+        env:
+          CI: true
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@master
         with:
-          publish: pnpm release
+          publish: yarn release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
