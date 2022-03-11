@@ -1,11 +1,5 @@
 # astro-vscode
 
-## 0.10.1
-
-### Patch Changes
-
-- 72cf8b1: trigger release
-
 ## 0.10.0
 
 ### Minor Changes
