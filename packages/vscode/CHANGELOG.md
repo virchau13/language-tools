@@ -1,11 +1,5 @@
 # astro-vscode
 
-## 0.10.4
-
-### Patch Changes
-
-- f48fa90: Fixed build command (again)
-
 ## 0.10.3
 
 ### Patch Changes
